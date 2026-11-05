@@ -1,0 +1,221 @@
+import random
+import re
+
+# --- Игра 1: Компьютер угадывает ваше число ---
+def play_game_1():
+    print("\n--- Режим: Компьютер-детектив ---")
+    
+    # Проверка ввода границ
+    try:
+        l = int(input("Введите минимальное число диапазона: "))
+        h = int(input("Введите максимальное число диапазона: "))
+    except ValueError:
+        print("Ошибка: нужно вводить целые числа.")
+        return
+
+    if l > h:
+        l, h = h, l
+
+    print(f"\nОтлично, диапазон от {l} до {h}.")
+    print("Загадайте число, но никому не говорите! Нажмите Enter, когда будете готовы.")
+    input()
+
+    current_l = l
+    current_h = h
+    
+    # Бинарный поиск + эвристика для "немного"
+    for attempt in range(1, 11):
+        # Защита от выхода за границы
+        if current_l > current_h:
+            print("Кажется, вы меня запутали или ошиблись в подсказках. Диапазон схлопнулся.")
+            break
+            
+        guess = (current_l + current_h) // 2
+        
+        # Формируем вопрос
+        prompt = f"Попытка {attempt}/10. Это число {guess}? "
+        ans = input(prompt).lower().strip()
+
+        if not ans:
+            print("Я не услышал ответа. Попробуйте еще раз.")
+            continue
+
+        # Обработка ответов
+        if any(word in ans for word in ['да', '=', 'угадал', 'именно', 'то самое', 'верно']):
+            print(f"Ура! Я справился за {attempt} попыток!")
+            return
+        elif any(word in ans for word in ['нет', 'мимо', 'не то']):
+            # Если просто "нет", сужаем диапазон стандартно, исключая текущее
+            if current_h - current_l > 2:
+                 pass # Продолжаем искать в том же диапазоне, но без этого числа
+            else:
+                # Если осталось мало чисел, просим уточнить
+                print("Осталось совсем мало вариантов. Уточните: оно больше или меньше?")
+                continue
+
+        # Логика изменения границ
+        is_changed = False
+        
+        if any(word in ans for word in ['больше', '>']):
+            current_l = guess + 1
+            is_changed = True
+        elif any(word in ans for word in ['меньше', '<']):
+            current_h = guess - 1
+            is_changed = True
+            
+        # Специфичные ответы "немного"
+        elif any(word in ans for word in ['чуть больше', 'немного больше', 'ближе к верху']):
+            step = max(1, (current_h - current_l) // 5)
+            current_l = guess + 1
+            current_h = min(current_h, guess + step * 2) # Сужаем верхнюю границу
+            is_changed = True
+        elif any(word in ans for word in ['чуть меньше', 'немного меньше', 'ближе к низу']):
+            step = max(1, (current_h - current_l) // 5)
+            current_h = guess - 1
+            current_l = max(current_l, guess - step * 2) # Сужаем нижнюю границу
+            is_changed = True
+            
+        # Ответы "примерно"
+        elif any(word in ans for word in ['рядом', 'около', 'примерно', 'почти']):
+            step = max(1, (current_h - current_l) // 4)
+            current_l = max(current_l, guess - step)
+            current_h = min(current_h, guess + step)
+            is_changed = True
+
+        if is_changed:
+            # Проверка на абсурдность новых границ
+            if current_l > current_h:
+                print("Хм, мои расчеты противоречат вашим подсказкам. Давайте начнем сначала?")
+                return
+        else:
+            print("Я не понял подсказку. Используйте слова: 'да', 'больше', 'меньше', 'чуть больше', 'рядом'.")
+
+    else:
+        print(f"Увы, мои 10 попыток закончились. Ваше число было где-то между {current_l} и {current_h}.")
+
+
+# --- Игра 2: Пользователь угадывает число компьютера ---
+def play_game_2():
+    print("\n--- Режим: Вы угадываете ---")
+    
+    try:
+        start_l = int(input("Нижняя граница: "))
+        start_h = int(input("Верхняя граница: "))
+    except ValueError:
+        print("Нужны цифры!")
+        return
+
+    if start_l > start_h:
+        start_l, start_h = start_h, start_l
+
+    secret_number = random.randint(start_l, start_h)
+    max_attempts = 10
+    attempts = 0
+    
+    # Текущий известный пользователю диапазон (для подсказок)
+    cur_l = start_l
+    cur_h = start_h
+
+    print(f"\nЯ загадал число от {start_l} до {start_h}. У вас есть {max_attempts} ходов.")
+    print("Можно писать просто число, или вопросы вроде 'больше 50?', 'меньше 100?'")
+
+    while attempts < max_attempts:
+        attempts += 1
+        user_input = input(f"\nХод {attempts}/{max_attempts} (диапазон {cur_l}-{cur_h}): ").lower().strip()
+
+        if user_input in ['выход', 'стоп', 'quit']:
+            print(f"Сдаетесь? Число было {secret_number}.")
+            return
+
+        # Попытка извлечь число из строки
+        match = re.search(r'-?\d+', user_input)
+        num = int(match.group()) if match else None
+
+        if num is None:
+            print("Не распознал число. Напишите цифрами.")
+            attempts -= 1 # Не считаем эту попытку
+            continue
+
+        # Логика проверки
+        guessed_correctly = False
+        
+        if 'равно' in user_input or '=' in user_input:
+            if num == secret_number:
+                print("ДА! Это оно!")
+                guessed_correctly = True
+            else:
+                print("Нет, это не оно.")
+                # Обновляем диапазон знаний пользователя
+                if num < secret_number:
+                    cur_l = max(cur_l, num + 1)
+                else:
+                    cur_h = min(cur_h, num - 1)
+        
+        elif 'больше' in user_input or '>' in user_input:
+            # Вопрос пользователя: "Число больше 50?"
+            if secret_number > num:
+                print("Да, мое число БОЛЬШЕ этого.")
+                cur_l = max(cur_l, num + 1)
+            else:
+                print("Нет, мое число НЕ больше этого (значит, меньше или равно).")
+                cur_h = min(cur_h, num)
+
+        elif 'меньше' in user_input or '<' in user_input:
+            # Вопрос пользователя: "Число меньше 50?"
+            if secret_number < num:
+                print("Да, мое число МЕНЬШЕ этого.")
+                cur_h = min(cur_h, num - 1)
+            else:
+                print("Нет, мое число НЕ меньше этого (значит, больше или равно).")
+                cur_l = max(cur_l, num)
+                
+        else:
+            # Просто ввод числа как предположение
+            if num == secret_number:
+                print(f"ПОБЕДА! Вы угадали число {secret_number} за {attempts} попыток!")
+                return
+            elif num < secret_number:
+                print("Мое число больше.")
+                cur_l = max(cur_l, num + 1)
+            else:
+                print("Мое число меньше.")
+                cur_h = min(cur_h, num - 1)
+                
+        if guessed_correctly:
+             print(f"Вы угадали за {attempts} попыток!")
+             return
+
+    print(f"\nПопытки исчерпаны. Я загадал число {secret_number}.")
+
+
+# --- Главное меню ---
+def main():
+    print("Привет! Добро пожаловать в игру 'Угадай число'.")
+    
+    while True:
+        print("\nЧто будем делать?")
+        print("1 - Я (компьютер) пытаюсь угадать ваше число")
+        print("2 - Вы пытаетесь угадать мое число")
+        print("0 - Выйти")
+
+        choice = input("Ваш выбор (1/2/0): ").strip()
+
+        if choice == '1':
+            play_game_1()
+        elif choice == '2':
+            play_game_2()
+        elif choice == '0':
+            print("Было приятно поиграть! До встречи!")
+            break
+        else:
+            print("Непонятная команда. Выберите 1, 2 или 0.")
+            continue
+
+        # Спросить про повтор
+        replay = input("\nСыграем еще раз в этот режим? (да/нет): ").lower()
+        if replay not in ['да', 'д', 'yes', 'y', '+']:
+            print("Хорошо, возвращайтесь в меню.")
+            # Цикл вернется к началу while True
+
+if __name__ == "__main__":
+    main()
