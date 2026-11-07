@@ -1,0 +1,161 @@
+import random
+import re
+
+# --- Код игры 1 (компьютер угадывает) ---
+def play_game_1():
+    l = int(input("Задай нижнюю границу: "))
+    h = int(input("Задай верхнюю границу: "))
+
+    if l > h:
+        l, h = h, l
+
+    print("Загадай число и нажми Enter. Запиисывать число в строку не надо.")
+    input()
+
+    for attempt in range(10):
+        guess = (l + h) // 2
+        step = max(1, (h - l) // 4)
+        
+        ans = input(f"Вопрос {attempt + 1}/10. Это {guess}? (да/нет, больше/меньше, немного/примерно): ").lower()
+
+        if ans in ['да', '=', 'равно', 'да это оно']:
+            print(f"Угадал за {attempt + 1} попыток!")
+            break
+        elif ans in ['нет', '<', 'меньше', 'точно нет', 'сильно меньше']:
+            h = guess - 1
+        elif ans in ['>', 'больше', 'точно больше', 'сильно больше']:
+            l = guess + 1
+        elif ans in ['сильно меньше', 'очень меньше', 'слишком много']:
+            h = guess // 2
+        elif ans in ['сильно больше', 'очень больше', 'слишком мало']:
+            l = guess // 2
+        elif ans in ['немного больше', 'слегка больше', 'чуть больше', 'предполагаю что больше', 'почти но больше', 'еще больше', 'ещё больше', 'побольше', 'несколько больше', 'нет но больше']:
+            l = guess + 1
+            h = guess + step
+        elif ans in ['немного меньше', 'слегка меньше', 'чуть меньше', 'предполагаю что меньше', 'почти но меньше', 'еще меньше', 'ещё меньше', 'поменьше', 'несколько меньше', 'нет но меньше']:
+            h = guess - 1
+            l = guess - step
+        elif ans in ['примерно', 'около того', 'где-то рядом', 'не совсем', 'почти', 'предполагаю что да']:
+            l = guess - step
+            h = guess + step
+        elif 'больше' in ans:
+            num = int(''.join(filter(str.isdigit, ans)))
+            print("да" if guess > num else "нет")
+            attempt -= 1
+        elif 'меньше' in ans:
+            num = int(''.join(filter(str.isdigit, ans)))
+            print("да" if guess < num else "нет")
+            attempt -= 1
+        else:
+            print("Не понял. Пиши: да, нет, больше, меньше, немного.")
+    else:
+        print(f"Не смог угадать за 10 попыток. Мой последний диапазон был от {l} до {h}.")
+
+# --- Код игры 2 (пользователь угадывает) ---
+def play_game_2():
+    def extract_number(text):
+        match = re.search(r'-?\d+', text)
+        return int(match.group()) if match else None
+
+    l = int(input("Введи начальную нижнюю границу: "))
+    h = int(input("Введи начальную верхнюю границу: "))
+
+    number = random.randint(l, h)
+    attempts = 0
+    max_attempts = 10
+
+    print(f"Я загадал число от {l} до {h}. У тебя есть {max_attempts} попыток.")
+
+    while attempts < max_attempts:
+        attempts += 1
+        
+        user_input = input(f"\nПопытка {attempts}/{max_attempts}. Твой вариант (число) или вопрос: ").lower().strip()
+
+        if user_input in ['выход', 'quit', 'exit']:
+            print(f"Игра прервана. Я загадал число {number}.")
+            break
+
+        try:
+            guess = int(user_input)
+            if guess < l or guess > h:
+                print(f"Число вне текущего диапазона (от {l} до {h}).")
+                attempts -= 1
+                continue
+                
+            if guess < number:
+                print("Слишком мало.")
+            elif guess > number:
+                print("Слишком много.")
+            else:
+                print(f"Правильно! Это было число {number}.")
+                print(f"Вы угадали за {attempts} попыток.")
+                break
+        except ValueError:
+            num = extract_number(user_input)
+            
+            if num is None:
+                print("Я не понял вопрос. Попробуй: 'больше 50', 'меньше 100', 'равно 75' или просто число.")
+                continue
+
+            if 'больше' in user_input or user_input.startswith('>'):
+                if number > num:
+                    print("да")
+                    l = max(l, num + 1)
+                else:
+                    print("нет")
+                    h = min(h, num)
+
+            elif 'меньше' in user_input or user_input.startswith('<'):
+                if number < num:
+                    print("да")
+                    h = min(h, num - 1)
+                else:
+                    print("нет")
+                    l = max(l, num)
+
+            elif 'равно' in user_input or user_input.startswith('='):
+                if number == num:
+                    print("да")
+                    print(f"Вы угадали за {attempts} попыток.")
+                    break
+                else:
+                    print("нет")
+                    if number < num:
+                        h = min(h, num - 1)
+                    else:
+                        l = max(l, num + 1)
+            else:
+                print("Используй слова: больше, меньше, равно.")
+                continue
+    else:
+        print(f"\nПопытки закончились. Я загадал число {number}.")
+
+# --- Единое начало и управление ---
+print("Добро пожаловать в игру 'Угадай число'!")
+
+while True:
+    print("\nВыберите игру:")
+    print("1 - Компьютер угадывает ваше число")
+    print("2 - Вы угадываете число компьютера")
+    print("0 - Выход из программы")
+
+    choice = input("Введите 1, 2 или 0: ")
+
+    if choice == '1':
+        play_game_1()
+    elif choice == '2':
+        play_game_2()
+    elif choice == '0':
+        print("Спасибо за игру! До свидания.")
+        break
+    else:
+        print("Неверный ввод. Попробуйте еще раз.")
+        continue
+
+    # Завершение каждой игры с вопросом к пользователю
+    play_again = input("\nХотите сыграть в эту игру еще раз? (да/нет): ").lower()
+    if play_again in ['да', 'д', 'yes', 'y']:
+        continue
+    elif play_again in ['нет', 'не', 'н', 'no']:
+        print("Спасибо за игру! До свидания.")
+        break
