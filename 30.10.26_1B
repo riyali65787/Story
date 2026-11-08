@@ -1,0 +1,22 @@
+l = int(input("Задай нижнюю границу: "))
+h = int(input("Задай верхнюю границу: "))
+
+print("Загадай число и нажми Enter.")
+input()
+
+for attempt in range(10):
+    guess = (l + h) // 2
+    ans = input(f"Вопрос {attempt + 1}/10. Это {guess}? (=, <, >): ").lower()
+    
+    if ans == "=":
+        print("Угадал :)")
+        break
+    elif ans == "<":
+        h = guess - 1
+    elif ans == ">":
+        l = guess + 1
+    else:
+        print("Введите =, < или >")
+        attempt -= 1
+else:
+    print("Не смог угадать за 10 вопросов :(")
