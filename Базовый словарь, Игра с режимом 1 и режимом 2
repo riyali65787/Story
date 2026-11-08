@@ -1,0 +1,169 @@
+import random
+
+# Базовый словарь
+BASE_WORDS_DATA = {
+    'хомячок': {'живое': 'да', 'цвет': 'рыжее/белое/серое', 'хвост': 'да', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'да', 'съедобный': 'нет'},
+    'единорог': {'живое': 'да', 'цвет': 'белое', 'хвост': 'да', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'киви': {'живое': 'нет', 'цвет': 'коричневое/зеленое', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'да'},
+    'роза': {'живое': 'да', 'цвет': 'красное/белое/розовое', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'дракон': {'живое': 'да', 'цвет': 'зеленое/красное/черное', 'хвост': 'да', 'плавники': 'нет', 'крылья': 'да', 'летает': 'да', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'русалка': {'живое': 'да', 'цвет': 'разное', 'хвост': 'да', 'плавники': 'да', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'да', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'самолёт': {'живое': 'нет', 'цвет': 'разное', 'хвост': 'да', 'плавники': 'нет', 'крылья': 'да', 'летает': 'да', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'ёжик': {'живое': 'да', 'цвет': 'серое/коричневое', 'хвост': 'да', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'кактус': {'живое': 'да', 'цвет': 'зеленое', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'да', 'съедобный': 'нет'},
+    'акула': {'живое': 'да', 'цвет': 'серое', 'хвост': 'да', 'плавники': 'да', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'да', 'домашнее': 'нет', 'съедобный': 'да'},
+    'бабочка': {'живое': 'да', 'цвет': 'разное', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'да', 'летает': 'да', 'плавает': 'нет', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'пицца': {'живое': 'нет', 'цвет': 'желтое/красное', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'да', 'съедобный': 'да'},
+    'робот': {'живое': 'нет', 'цвет': 'разное', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'да', 'съедобный': 'нет'},
+    'кит': {'живое': 'да', 'цвет': 'серое/синее', 'хвост': 'да', 'плавники': 'да', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'да', 'домашнее': 'нет', 'съедобный': 'нет'},
+    'зонт': {'живое': 'нет', 'цвет': 'разное', 'хвост': 'нет', 'плавники': 'нет', 'крылья': 'нет', 'летает': 'нет', 'плавает': 'нет', 'домашнее': 'да', 'съедобный': 'нет'}
+}
+
+QUESTIONS = ['живое', 'съедобный', 'цвет', 'хвост', 'плавники', 'крылья', 'летает', 'плавает', 'домашнее']
+
+def normalize(text: str) -> str:
+    return text.strip().lower()
+
+def ask_yes_no(question: str) -> str:
+    while True:
+        answer = normalize(input(f"{question} (да/нет): "))
+        if answer in ['да', 'нет']:
+            return answer
+        print("Пожалуйста, ответьте 'да' или 'нет'.")
+
+# РЕЖИМ 1: Человек угадывает (использует только базовый словарь)
+def mode_human_guesses():
+    secret_word = random.choice(list(BASE_WORDS_DATA.keys()))
+    print("\nЯ загадал слово. Попробуй угадать его.")
+    print("Задавай вопросы про свойства или сразу спроси 'это [слово]'.\n")
+
+    while True:
+        user_input = normalize(input("Твой вопрос: "))
+
+        if user_input.startswith("это "):
+            guess = user_input[4:]
+            if guess == secret_word:
+                print(f"\nВерно! Это {secret_word}. Ты выиграл!")
+            else:
+                print(f"\nНет, это не {guess}. Ты проиграл. Я загадал: {secret_word}.")
+            break
+        
+        if user_input in QUESTIONS:
+            correct = BASE_WORDS_DATA[secret_word][user_input]
+            print(f"Ответ: {correct}")
+        else:
+            print("Я не понял вопрос. Спроси про свойство (например: живое, цвет, хвост) или 'это [слово]'")
+        
+        print("-" * 30)
+
+# РЕЖИМ 2: Компьютер угадывает (использует расширяющийся словарь)
+def mode_computer_guesses(learned_words: dict):
+    print("\nЗагадай любое слово. Я попробую его угадать.\n")
+    input("Нажми Enter, когда загадаешь...")
+
+    possible_words = list(learned_words.keys())
+
+    for prop in QUESTIONS:
+        if len(possible_words) <= 1:
+            break
+
+        if prop == 'съедобный':
+            all_non_living = all(learned_words[w]['живое'] == 'нет' for w in possible_words)
+            if all_non_living:
+                answer = ask_yes_no(f"Это {prop}?")
+                possible_words = [w for w in possible_words if learned_words[w][prop] == answer]
+            continue
+
+        if prop == 'цвет':
+            available_colors = set()
+            for w in possible_words:
+                colors = [c.strip() for c in learned_words[w][prop].split('/')]
+                available_colors.update(colors)
+
+            for color in sorted(list(available_colors)):
+                if len(possible_words) <= 1:
+                    break
+                answer = ask_yes_no(f"Оно {color}?")
+                new_candidates = []
+                for w in possible_words:
+                    word_colors = [c.strip() for c in learned_words[w][prop].split('/')]
+                    if (answer == 'да' and color in word_colors) or (answer == 'нет' and color not in word_colors):
+                        new_candidates.append(w)
+                possible_words = new_candidates
+        else:
+            answer = ask_yes_no(f"Это {prop}?")
+            possible_words = [w for w in possible_words if learned_words[w][prop] == answer]
+
+    # ФИНАЛ И ОБУЧЕНИЕ
+    if len(possible_words) == 1:
+        guess = possible_words[0]
+        print(f"\nЯ думаю, это... {guess}!")
+        if ask_yes_no("Я угадал?") == 'да':
+            print("Ура! Я выиграл!")
+        else:
+            # Человек говорит, что компьютер не прав. Проверяем, новое ли это слово.
+            new_word = normalize(input("Я ошибся. Что ты загадал? "))
+            if new_word not in learned_words:
+                print("Интересное слово! Я его не знаю. Давай запомним его.")
+                learned_words[new_word] = {}
+                for p in QUESTIONS:
+                    learned_words[new_word][p] = ask_yes_no(f"Оно {p}?")
+                print(f"Я запомнил слово '{new_word}'. Теперь я знаю его!")
+            else:
+                print("Странно, это слово уже было в моем списке. Видимо, я где-то ошибся в логике.")
+    
+    elif len(possible_words) == 0:
+        print("\nХм, по моим данным ни одно слово не подходит под твои ответы.")
+        new_word = normalize(input("Что ты загадал? "))
+        if new_word not in learned_words:
+            print("Я это слово не знаю. Объясни мне его свойства:")
+            learned_words[new_word] = {}
+            for prop in QUESTIONS:
+                learned_words[new_word][prop] = ask_yes_no(f"Оно {prop}?")
+            print(f"Я запомнил слово '{new_word}'.")
+        else:
+            print("Я знаю это слово, но мои ответы почему-то не совпали.")
+    
+    else:
+        guess = random.choice(possible_words)
+        print(f"\nЯ думаю, это... {guess}!")
+        if ask_yes_no("Я угадал?") == 'да':
+            print("Ура! Я выиграл!")
+        else:
+            new_word = normalize(input("Я ошибся. Что ты загадал? "))
+            if new_word not in learned_words:
+                print("Расскажи мне о нем:")
+                learned_words[new_word] = {}
+                for p in QUESTIONS:
+                    learned_words[new_word][p] = ask_yes_no(f"Оно {p}?")
+                print(f"Я запомнил слово '{new_word}'.")
+            else:
+                print("Понял. Я запомнил наш диалог.")
+
+def main():
+    # Рабочая копия базы знаний. Она будет пополняться во втором режиме.
+    learned_words = BASE_WORDS_DATA.copy()
+    
+    print("Добро пожаловать в игру 'Угадай слово'!")
+    
+    while True:
+        print("\nВыбери режим:")
+        print("1. Я загадываю, ты угадываешь")
+        print("2. Ты загадываешь, я угадываю")
+        
+        mode = ""
+        while mode not in ['1', '2']:
+            mode = input("Твой выбор (1/2): ")
+        
+        if mode == '1':
+            mode_human_guesses()
+        else:
+            mode_computer_guesses(learned_words)
+        
+        again = ask_yes_no("\nСыграем еще раз?")
+        if again == 'нет':
+            print("Спасибо за игру!")
+            break
+
+if __name__ == "__main__":
+    main()
