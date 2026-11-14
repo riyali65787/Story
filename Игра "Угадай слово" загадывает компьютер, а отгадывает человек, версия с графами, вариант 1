@@ -1,0 +1,160 @@
+import random
+
+# Словарь слов с подсказками (от общей к более точной)
+WORDS = {
+    "солнце": [
+        "Его можно увидеть на небе.",
+        "Оно даёт Земле свет и тепло.",
+        "Утром оно восходит, а вечером заходит."
+    ],
+    "кошка": [
+        "Это домашнее животное.",
+        "Оно умеет мурлыкать.",
+        "Оно мяукает и ловит мышей."
+    ],
+    "компьютер": [
+        "Это электронное устройство.",
+        "На нём можно работать и играть.",
+        "К нему подключают монитор, мышь и клавиатуру."
+    ],
+    "яблоко": [
+        "Это фрукт.",
+        "У него внутри есть семечки.",
+        "Оно растёт на яблоне."
+    ],
+    "дождь": [
+        "Это природное явление.",
+        "После него остаются лужи.",
+        "Когда он идёт, люди раскрывают зонты."
+    ],
+    "книга": [
+        "Её можно взять в библиотеке.",
+        "У неё есть обложка и страницы.",
+        "Её читают по главам."
+    ],
+    "собака": [
+        "Это домашнее животное.",
+        "Её водят на прогулку на поводке.",
+        "Она лает и виляет хвостом."
+    ],
+    "машина": [
+        "Это транспорт.",
+        "У неё четыре колеса и руль.",
+        "Водитель заливает бензин в её бак."
+    ],
+    "дерево": [
+        "Это растение.",
+        "У него есть ствол и ветки.",
+        "На нём растут листья."
+    ],
+    "телефон": [
+        "Это устройство связи.",
+        "С его помощью можно звонить.",
+        "В нём есть экран и кнопки (или сенсор)."
+    ]
+}
+
+MAX_ATTEMPTS = 3
+
+
+def show_tree(word, history, reveal):
+    """
+    Рисует дерево попыток в консоли.
+    history - список кортежей (подсказка, ответ_пользователя, угадал_ли)
+    reveal - показывать ли загаданное слово
+    """
+    print()
+    print("Загаданное слово:", word if reveal else "???")
+    
+    if not history:
+        print("(пока нет попыток)")
+        return
+    
+    last_index = len(history) - 1
+    
+    for i, (hint, answer, is_correct) in enumerate(history):
+        is_last = (i == last_index)
+        branch = "└──" if is_last else "├──"
+        sub_branch = "    " if is_last else "│   "
+        
+        print(branch, hint)
+        
+        if answer is None:
+            print(sub_branch, "(ожидание ответа...)")
+        else:
+            if is_correct:
+                print(sub_branch, answer, "- верно!")
+            else:
+                print(sub_branch, answer, "- неверно")
+    
+    print()
+
+
+def play_round():
+    """Один раунд игры. Возвращает True если пользователь хочет играть ещё."""
+    secret_word = random.choice(list(WORDS.keys()))
+    hints = WORDS[secret_word]
+    history = []
+    
+    print("\nЯ загадал слово. У тебя три попытки!")
+    print()
+    
+    for attempt_num in range(MAX_ATTEMPTS):
+        hint = hints[attempt_num]
+        remaining = MAX_ATTEMPTS - attempt_num - 1
+        
+        # Показываем текущее состояние дерева
+        history.append((hint, None, False))
+        show_tree(secret_word, history, False)
+        
+        print(f"Подсказка {attempt_num + 1} из {MAX_ATTEMPTS}: {hint}")
+        print(f"Осталось попыток: {remaining + 1}.")
+        
+        guess = input("Что это? ").strip().lower()
+        
+        if not guess:
+            print("Ты ничего не ввёл. Попробуй ещё раз.")
+            history.pop()
+            attempt_num -= 1
+            continue
+        
+        is_correct = (guess == secret_word)
+        history[-1] = (hint, guess, is_correct)
+        
+        if is_correct:
+            show_tree(secret_word, history, True)
+            print(f"Ты угадал! Попыток понадобилось: {attempt_num + 1}.")
+            return ask_play_again()
+        else:
+            show_tree(secret_word, history, False)
+            if remaining > 0:
+                print(f"Попробуй ещё! Осталось попыток: {remaining}.")
+            else:
+                print(f"Ты не угадал. Загаданное слово было: {secret_word}.")
+                return ask_play_again()
+    
+    return ask_play_again()
+
+
+def ask_play_again():
+    """Спрашивает, хочет ли пользователь играть ещё раз."""
+    while True:
+        answer = input("Сыграем ещё раз? (да/нет): ").strip().lower()
+        if answer in ("да", "нет"):
+            return answer == "да"
+        print("Пожалуйста, ответь 'да' или 'нет'.")
+
+
+def main():
+    print("Добро пожаловать в игру 'Угадай слово'!")
+    print("Я буду давать подсказки, а ты попробуй отгадать слово.")
+    print()
+    
+    while True:
+        if not play_round():
+            print("Спасибо за игру! До встречи.")
+            break
+
+
+if __name__ == "__main__":
+    main()
